@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { RefreshCw, ListFilter, Settings, Info, X, FileText, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Layout, Calendar, Layers, FileCheck, PieChart, Activity, Share2, Target, BarChart3, FileOutput } from 'lucide-react';
+import { RefreshCw, ListFilter, Settings, Info, X, FileText, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Layout, Calendar, Layers, FileCheck, PieChart, Activity, Share2, Target, BarChart3, FileOutput, Database, Link2, ClipboardList, FileSignature } from 'lucide-react';
 import { ServiceItem } from '../types';
 import ItemSplitModal from './ItemSplitModal';
 
@@ -85,7 +85,7 @@ const ProgressBar: React.FC<{ percent: number; color?: 'blue' | 'emerald' | 'ind
 const MetricCard: React.FC<{ label: string; value: number; color: 'blue' | 'emerald' | 'indigo' | 'orange' }> = ({ label, value, color }) => {
   return (
     <div className="flex-1 min-w-[140px] bg-[#f8fbff]/50 border border-blue-50/50 rounded-xl p-4 flex flex-col gap-3">
-      <span className="text-xs font-bold text-gray-500">{label}</span>
+      <span className="text-[11px] font-bold text-gray-500">{label}</span>
       <div className="flex items-center gap-2">
         <span className={`text-sm font-black italic ${color === 'blue' ? 'text-blue-600' : color === 'orange' ? 'text-orange-600' : color === 'emerald' ? 'text-emerald-600' : 'text-indigo-600'}`}>{value}%</span>
         <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -100,39 +100,36 @@ const MetricCard: React.FC<{ label: string; value: number; color: 'blue' | 'emer
 };
 
 const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClose: () => void }> = ({ item, isOpen, onClose }) => {
-  const [expandedIndices, setExpandedIndices] = useState<number[]>([0]);
+  const [expandedIndices, setExpandedIndices] = useState<string[]>(['form-info', 'materials-list', 'output-doc']);
 
   if (!item) return null;
 
-  const toggleSection = (idx: number) => {
+  const toggleSection = (id: string) => {
     setExpandedIndices(prev => 
-      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
 
-  const mockSplitDetails = {
-    inputs: [
-      { 
-        name: '购房首付款凭证', 
-        count: 42, 
-        relateProgress: 53,
-        items: [
-          { name: '姓名', linked: '是', resource: '购房首付款信息接口 - 姓名', remark: '--' },
-          { name: '照片', linked: '否', resource: '--', remark: '电子证照中获取' },
-          { name: '结婚证号', linked: '是', resource: '购房首付款信息接口 - 结婚证号', remark: '--' },
-          { name: '身份证号', linked: '是', resource: '--', remark: '--' }
-        ]
-      },
-      { 
-        name: '居民户口簿', 
-        count: 15, 
-        relateProgress: 100,
-        items: []
-      }
-    ],
+  // 模拟详细数据
+  const mockDetails = {
+    // 申报材料【输入】
+    input: {
+      formInfo: [
+        { name: '姓名', linked: '是', resource: '自然人基础信息查询接口', field: '姓名', remark: '--' },
+        { name: '照片', linked: '否', resource: '--', field: '--', remark: '电子证照中获取' },
+        { name: '结婚证号', linked: '是', resource: '婚姻登记状态查询接口', field: '婚姻状态', remark: '--' },
+      ],
+      materials: [
+        { id: 'm1', name: '居民户口簿', fields: '户主姓名、户口簿首页、出生日期、身份证号码、户籍地址、与户主关系', linked: '是', access: '电子证照回流', remark: '--' },
+        { id: 'm2', name: '身份证', fields: '姓名、性别、民族、出生日期、住址、公民身份号码、签发机关、有效期限', linked: '是', access: '电子证照回流', remark: '读取正反面信息' },
+        { id: 'm3', name: '延长参保缴费年限申请表', fields: '--', linked: '否', access: '--', remark: '--' },
+      ]
+    },
+    // 办理结果【输出】
     output: {
-      hasResult: false,
-      reason: '直接展示无办理结果的原因。'
+      resultInfo: [
+        { name: '批准决定书编号', linked: '是', resource: '审批结果公示库', field: '编号', remark: '' },
+      ]
     }
   };
 
@@ -142,163 +139,217 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
         className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
-      <div className={`fixed top-0 right-0 h-full w-[1100px] max-w-[95vw] bg-[#f4f7f9] shadow-2xl z-[1001] transition-transform duration-300 ease-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+      <div className={`fixed top-0 right-0 h-full w-[1100px] max-w-[95vw] bg-[#f8fafc] shadow-2xl z-[1001] transition-transform duration-300 ease-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
         {/* Header */}
-        <div className="h-14 px-8 border-b border-gray-200 flex items-center justify-between bg-white shrink-0 shadow-sm z-10">
-          <h3 className="text-base font-bold text-gray-800 tracking-wide">事项拆分关联详情</h3>
-          <button onClick={onClose} className="px-5 py-1.5 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-all font-semibold active:scale-95 shadow-sm">
-            关闭
+        <div className="h-16 px-8 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 shadow-sm z-10">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-100">
+                <ClipboardList size={18} />
+             </div>
+             <h3 className="text-base font-black text-gray-800 tracking-tight">政务服务事项拆分关联详情</h3>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors">
+            <X size={22} />
           </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-thin">
-          {/* Main Info Card - Matches Screenshot */}
-          <div className="bg-white border border-gray-100 rounded-xl p-8 shadow-xl shadow-gray-200/40 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/30 rounded-full -mr-24 -mt-24 transition-transform group-hover:scale-110 duration-700"></div>
-            <div className="flex flex-col gap-8 relative z-10">
+        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+          {/* 基本信息看板 */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50/50 rounded-full -mr-24 -mt-24 pointer-events-none"></div>
+            <div className="relative z-10 space-y-8">
               <div className="flex items-start gap-6">
-                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-200 shrink-0 transform transition-transform group-hover:rotate-3">
-                  <Layout size={32} />
+                <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xl shadow-blue-100">
+                  <Layout size={28} />
                 </div>
-                <div className="space-y-3 flex-1">
-                  <h2 className="text-2xl font-extrabold text-gray-800 leading-tight">{item.processItem}</h2>
-                  <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                <div className="flex-1">
+                  <h2 className="text-2xl font-black text-gray-800 leading-tight mb-4">{item.processItem}</h2>
+                  <div className="flex flex-wrap gap-x-10 gap-y-3">
                     <div className="flex items-center gap-2">
-                      <Layers size={14} className="text-gray-400" />
-                      <span className="text-[13px] text-gray-400 font-medium">事项主项:</span>
-                      <span className="text-[13px] text-gray-700 font-bold">{item.mainItem}</span>
+                       <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">主项</span>
+                       <span className="text-sm font-bold text-gray-700">{item.mainItem}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <FileCheck size={14} className="text-gray-400" />
-                      <span className="text-[13px] text-gray-400 font-medium">事项子项:</span>
-                      <span className="text-[13px] text-gray-700 font-bold">{item.subItem}</span>
+                       <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">子项</span>
+                       <span className="text-sm font-bold text-gray-700">{item.subItem}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar size={14} className="text-gray-400" />
-                      <span className="text-[13px] text-gray-400 font-medium">更新时间:</span>
-                      <span className="text-[13px] text-gray-700 font-bold font-mono">{item.updateTime} 12:00:00</span>
+                       <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">最后更新</span>
+                       <span className="text-sm font-mono text-gray-500 font-bold">{item.updateTime}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Business Metrics Row */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Activity size={18} className="text-blue-500" />
-                  <span className="text-xs font-black text-gray-800 tracking-tight">业务指标监控</span>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <MetricCard label="拆分进度" value={item.splitProgress} color="blue" />
-                  <MetricCard label="关联进度" value={item.relateProgress} color="orange" />
-                  <MetricCard label="单材料免提交率" value={item.exemptRate} color="emerald" />
-                  <MetricCard label="结果共享合规率" value={item.complianceRate} color="indigo" />
-                </div>
+              {/* 指标看板 */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricCard label="拆分关联进度" value={item.splitProgress} color="blue" />
+                <MetricCard label="单材料免提交率" value={item.relateProgress} color="orange" />
+                <MetricCard label="表单免填报率" value={item.exemptRate} color="emerald" />
+                <MetricCard label="输出结果共享合规率" value={item.complianceRate} color="indigo" />
               </div>
             </div>
           </div>
 
-          {/* Input Section */}
+          {/* 申报材料详情【输入】 */}
           <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-1.5 h-6 bg-blue-600 rounded-full shadow-sm shadow-blue-200"></div>
-              <h4 className="text-base font-extrabold text-gray-800">申报材料信息【输入】</h4>
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                  <h4 className="text-base font-black text-gray-800">申报材料信息详情【输入端】</h4>
+               </div>
             </div>
-            
+
             <div className="space-y-4">
-              {mockSplitDetails.inputs.map((material, idx) => (
-                <div key={idx} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
-                  <div 
-                    onClick={() => toggleSection(idx)}
-                    className="flex items-center justify-between px-7 py-5 cursor-pointer bg-white hover:bg-gray-50/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-8">
-                      <div className="flex items-center gap-4 min-w-[180px]">
-                        <span className="w-7 h-7 flex items-center justify-center bg-gray-100 text-gray-500 rounded-lg text-xs font-black">{idx + 1}</span>
-                        <span className="text-sm font-black text-gray-800 tracking-tight">{material.name}</span>
-                      </div>
-                      <div className="flex items-center gap-8 text-[11px] font-bold">
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400">信息项:</span>
-                          <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">{material.count}个</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400">关联进度:</span>
-                          <span className={`px-2 py-0.5 rounded-full ${material.relateProgress === 100 ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
-                            {material.relateProgress}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs font-black text-blue-500 hover:text-blue-700 transition-colors">
-                      {expandedIndices.includes(idx) ? (
-                        <>收起 <ChevronUp size={14} /></>
-                      ) : (
-                        <>展开 <ChevronDown size={14} /></>
-                      )}
-                    </div>
+              {/* 1. 表单信息拆分列表 */}
+              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                <div 
+                  onClick={() => toggleSection('form-info')}
+                  className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Layout size={18} className="text-blue-600" />
+                    <span className="text-sm font-black text-gray-800">表单信息（字段拆分关联）</span>
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">共 {mockDetails.input.formInfo.length} 项</span>
                   </div>
-                  
-                  {expandedIndices.includes(idx) && (
-                    <div className="p-8 border-t border-gray-50 bg-[#fafbfc]">
-                      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                        <table className="w-full text-sm text-left border-collapse">
-                          <thead className="bg-[#f8f9fb] text-gray-500 font-bold border-b border-gray-100 uppercase text-[11px] tracking-widest">
-                            <tr>
-                              <th className="px-6 py-5 text-center w-24">序号</th>
-                              <th className="px-6 py-5">信息项</th>
-                              <th className="px-6 py-5">是否实现信息数据接入</th>
-                              <th className="px-6 py-5">关联资源目录</th>
-                              <th className="px-6 py-5">备注说明</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-50">
-                            {material.items.length > 0 ? material.items.map((info, infoIdx) => (
-                              <tr key={infoIdx} className="hover:bg-blue-50/20 transition-all group duration-200">
-                                <td className="px-6 py-5 text-center text-gray-400 font-mono font-bold">{infoIdx + 1}</td>
-                                <td className="px-6 py-5 text-gray-800 font-black">{info.name}</td>
-                                <td className="px-6 py-5 text-center">
-                                  <span className={`px-3 py-1.5 rounded-lg text-[11px] font-black ${info.linked === '是' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                                    {info.linked}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-5 text-gray-700 font-bold">{info.resource}</td>
-                                <td className="px-6 py-5 text-gray-400 text-[11px] italic font-medium">{info.remark}</td>
-                              </tr>
-                            )) : (
-                              <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-gray-400 italic">暂无拆分信息项</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+                  {expandedIndices.includes('form-info') ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                 </div>
-              ))}
+                {expandedIndices.includes('form-info') && (
+                  <div className="p-4 bg-white border-t border-gray-50">
+                    <table className="w-full text-xs text-left">
+                       <thead className="bg-[#f9fafc] text-gray-400 font-bold uppercase text-[10px] tracking-widest border-b border-gray-50">
+                          <tr>
+                            <th className="px-6 py-4 w-16 text-center">序号</th>
+                            <th className="px-6 py-4 w-48">信息项名称</th>
+                            <th className="px-6 py-4 w-24">接入状态</th>
+                            <th className="px-6 py-4">关联资源目录 / 字段</th>
+                            <th className="px-6 py-4">备注</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-gray-50">
+                          {mockDetails.input.formInfo.map((row, i) => (
+                            <tr key={i} className="hover:bg-blue-50/10">
+                              <td className="px-6 py-4 text-center text-gray-400 font-mono">{i+1}</td>
+                              <td className="px-6 py-4 font-black text-gray-800">{row.name}</td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black ${row.linked === '是' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{row.linked}</span>
+                              </td>
+                              <td className="px-6 py-4 font-bold text-gray-700">
+                                <div className="max-w-[300px] truncate">{row.resource}</div>
+                                {row.field !== '--' && <div className="text-blue-500 text-[10px]">字段: {row.field}</div>}
+                              </td>
+                              <td className="px-6 py-4 text-gray-400 italic">{row.remark}</td>
+                            </tr>
+                          ))}
+                       </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. 申报材料要素列表 */}
+              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                <div 
+                  onClick={() => toggleSection('materials-list')}
+                  className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileSignature size={18} className="text-indigo-500" />
+                    <span className="text-sm font-black text-gray-800">申报材料清单（要素登记及接入）</span>
+                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded">共 {mockDetails.input.materials.length} 份</span>
+                  </div>
+                  {expandedIndices.includes('materials-list') ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+                </div>
+                {expandedIndices.includes('materials-list') && (
+                  <div className="p-4 bg-white border-t border-gray-50">
+                    <table className="w-full text-xs text-left">
+                       <thead className="bg-[#f9fafc] text-gray-400 font-bold uppercase text-[10px] tracking-widest border-b border-gray-50">
+                          <tr>
+                            <th className="px-6 py-4 w-16 text-center">序号</th>
+                            <th className="px-6 py-4 w-56">材料名称</th>
+                            <th className="px-6 py-4">包含字段内容</th>
+                            <th className="px-6 py-4 w-24">接入状态</th>
+                            <th className="px-6 py-4 w-40">接入方式</th>
+                            <th className="px-6 py-4 w-32">备注</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-gray-50">
+                          {mockDetails.input.materials.map((mat, i) => (
+                            <tr key={mat.id} className="hover:bg-indigo-50/10 transition-colors">
+                              <td className="px-6 py-4 text-center text-gray-400 font-mono">{i+1}</td>
+                              <td className="px-6 py-4 font-black text-gray-800">{mat.name}</td>
+                              <td className="px-6 py-4">
+                                <div className="text-gray-600 leading-relaxed font-medium line-clamp-2" title={mat.fields}>
+                                  {mat.fields}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-1.5 h-1.5 rounded-full ${mat.linked === '是' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-gray-300'}`}></div>
+                                  <span className={`font-black ${mat.linked === '是' ? 'text-green-600' : 'text-gray-400'}`}>{mat.linked}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 font-bold text-gray-700">{mat.access}</td>
+                              <td className="px-6 py-4 text-gray-400 italic">{mat.remark}</td>
+                            </tr>
+                          ))}
+                       </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Output Section - Matches Screenshot */}
+          {/* 办理结果信息详情【输出】 */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-1.5 h-6 bg-indigo-600 rounded-full shadow-sm shadow-indigo-200"></div>
-              <h4 className="text-base font-extrabold text-gray-800">办理结果信息【输出】</h4>
+               <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+               <h4 className="text-base font-black text-gray-800">办理结果详情【输出端】</h4>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-3xl p-12 flex flex-col items-center justify-center text-center shadow-md relative group overflow-hidden">
-               <div className="absolute inset-0 bg-gray-50/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-               <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 border border-gray-100 shadow-inner">
-                  <AlertCircle size={40} className="text-gray-300" />
-               </div>
-               <h5 className="text-lg font-black text-gray-800 mb-4">无办理结果反馈</h5>
-               <div className="bg-[#f8f9fb] border border-gray-100 rounded-xl px-6 py-4 max-w-[400px]">
-                  <p className="text-[13px] text-gray-500 leading-relaxed font-medium italic">
-                    <span className="text-gray-400 block mb-1 font-bold not-italic">原因说明：</span>
-                    {mockSplitDetails.output.reason}
-                  </p>
-               </div>
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                <div 
+                  onClick={() => toggleSection('output-doc')}
+                  className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileCheck size={18} className="text-indigo-600" />
+                    <span className="text-sm font-black text-gray-800">结果证明文档（信息项拆分关联）</span>
+                  </div>
+                  {expandedIndices.includes('output-doc') ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+                </div>
+                {expandedIndices.includes('output-doc') && (
+                  <div className="p-4 bg-white border-t border-gray-50">
+                    <table className="w-full text-xs text-left">
+                       <thead className="bg-[#f9fafc] text-gray-400 font-bold uppercase text-[10px] tracking-widest border-b border-gray-50">
+                          <tr>
+                            <th className="px-6 py-4 w-16 text-center">序号</th>
+                            <th className="px-6 py-4 w-56">结果信息项</th>
+                            <th className="px-6 py-4 w-32">回流接入状态</th>
+                            <th className="px-6 py-4">关联资源目录 / 字段</th>
+                            <th className="px-6 py-4">备注</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-gray-50">
+                          {mockDetails.output.resultInfo.map((row, i) => (
+                            <tr key={i} className="hover:bg-indigo-50/10">
+                              <td className="px-6 py-4 text-center text-gray-400 font-mono">{i+1}</td>
+                              <td className="px-6 py-4 font-black text-gray-800">{row.name}</td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black ${row.linked === '是' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'}`}>{row.linked}</span>
+                              </td>
+                              <td className="px-6 py-4 font-bold text-gray-700">
+                                <div>{row.resource}</div>
+                                {row.field !== '--' && <div className="text-indigo-500 text-[10px]">字段: {row.field}</div>}
+                              </td>
+                              <td className="px-6 py-4 text-gray-400 italic">{row.remark || '--'}</td>
+                            </tr>
+                          ))}
+                       </tbody>
+                    </table>
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -379,16 +430,8 @@ const ItemManagement: React.FC = () => {
                 <th className="px-4 py-4 font-bold">办理项</th>
                 <th className="px-4 py-4 text-center">
                   <div className="flex items-center justify-center gap-1">
-                    拆分进度
-                    <Tooltip content="拆分进度根据输入输出文件中已进行拆分的文件数占总文件数的比例">
-                      <Info size={14} className="text-gray-400 cursor-help" />
-                    </Tooltip>
-                  </div>
-                </th>
-                <th className="px-4 py-4 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    关联进度
-                    <Tooltip content="关联进度按照信息项中已关联+有理由不关联的信息项/总信息项计算">
+                    拆分关联进度
+                    <Tooltip content="已填写的输入输出文件信息占全部输入输出文件比例">
                       <Info size={14} className="text-gray-400 cursor-help" />
                     </Tooltip>
                   </div>
@@ -396,15 +439,23 @@ const ItemManagement: React.FC = () => {
                 <th className="px-4 py-4 text-center">
                   <div className="flex items-center justify-center gap-1">
                     单材料免提交率
-                    <Tooltip content="在所有事项的输入材料中，完全由数据支撑、无需纸质件上传的比例。">
+                    <Tooltip content="申报材料文件中有接入的数量占全部的申报材料文件数">
+                      <Info size={14} className="text-gray-400 cursor-help" />
+                    </Tooltip>
+                  </div>
+                </th>
+                <th className="px-4 py-4 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    表单免填报率
+                    <Tooltip content="申报填报的字段中，已关联数据资源目录的字段占总字段的比例。">
                       <FileText size={14} className="text-emerald-500 cursor-help" />
                     </Tooltip>
                   </div>
                 </th>
                 <th className="px-4 py-4 text-center">
                   <div className="flex items-center justify-center gap-1">
-                    结果共享合规率
-                    <Tooltip content="事项办结后产生的输出文件，已全量关联至资源目录并实现回流。">
+                    输出结果共享合规率
+                    <Tooltip content="输出结果信息项关联数据目录的数量占信息项总数的比例。">
                       <Share2 size={14} className="text-indigo-500 cursor-help" />
                     </Tooltip>
                   </div>
