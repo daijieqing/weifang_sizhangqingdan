@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { X, Search, Plus, Info, ChevronDown, ChevronRight, Link, Edit2, Trash2, ArrowUp, ArrowDown, Check, Zap, RotateCcw, FileText, CheckCircle, Database, Settings, Layout, FileCheck, Share2, Save, Link2, Download, FileUp, UploadCloud, FileType } from 'lucide-react';
+import { X, Search, Plus, Info, ChevronDown, ChevronRight, Link, Edit2, Trash2, ArrowUp, ArrowDown, Check, Zap, RotateCcw, FileText, CheckCircle, Database, Settings, Layout, FileCheck, Share2, Save, Link2, Download, FileUp, UploadCloud, FileType, Trash } from 'lucide-react';
 
 interface TableRow {
   id: number;
   infoItem: string;
-  isLinked: string;
+  isLinked: string; // '是' | '否' | '无需接入' | '请选择'
   resourceDir: string;
   resourceCode?: string;
   selectedField?: string;
@@ -45,9 +45,12 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
     { id: 101, infoItem: '批准决定书编号', isLinked: '是', resourceDir: '审批结果公示库', resourceCode: '99002', selectedField: '编号', remark: '' },
   ]);
 
+  // 批量选择状态
+  const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
+
   // 3. 其他申报材料整体配置数据
   const [materialsConfigs, setMaterialsConfigs] = useState<Record<string, MaterialConfig>>({
-    'in-1': { id: 'in-1', name: '居民户口簿', fieldsText: '户主姓名、户口簿首页、出生日期、身份证号码、户籍地址、与户主关系', isLinked: '是', accessMethod: '电子证照回流', remark: '' },
+    'in-1': { id: 'in-1', name: '居民户口搏', fieldsText: '户主姓名、户口簿首页、出生日期、身份证号码、户籍地址、与户主关系', isLinked: '是', accessMethod: '电子证照回流', remark: '' },
     'in-2': { id: 'in-2', name: '身份证', fieldsText: '姓名、性别、民族、出生日期、住址、公民身份号码、签发机关、有效期限', isLinked: '是', accessMethod: '电子证照回流', remark: '读取正反面信息' },
     'in-3': { id: 'in-3', name: '延长参保缴费年限申请表', fieldsText: '', isLinked: '否', accessMethod: '', remark: '' },
   });
@@ -57,6 +60,37 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
   const [currentRowId, setCurrentRowId] = useState<number | null>(null);
 
   // --- 操作函数 ---
+
+  const toggleSelectAll = (data: TableRow[]) => {
+    if (selectedRowIds.length === data.length) {
+      setSelectedRowIds([]);
+    } else {
+      setSelectedRowIds(data.map(r => r.id));
+    }
+  };
+
+  const toggleSelectRow = (id: number) => {
+    setSelectedRowIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleBatchDelete = (data: TableRow[], setData: React.Dispatch<React.SetStateAction<TableRow[]>>) => {
+    if (selectedRowIds.length === 0) return;
+    if (window.confirm(`确认删除选中的 ${selectedRowIds.length} 条记录吗？`)) {
+      setData(data.filter(r => !selectedRowIds.includes(r.id)));
+      setSelectedRowIds([]);
+    }
+  };
+
+  const handleBatchUpdateStatus = (data: TableRow[], setData: React.Dispatch<React.SetStateAction<TableRow[]>>, status: string) => {
+    if (selectedRowIds.length === 0) return;
+    setData(data.map(r => selectedRowIds.includes(r.id) ? { ...r, isLinked: status } : r));
+    setSelectedRowIds([]);
+  };
+
+  const handleBatchEdit = (data: TableRow[], setData: React.Dispatch<React.SetStateAction<TableRow[]>>) => {
+    if (selectedRowIds.length === 0) return;
+    setData(data.map(r => selectedRowIds.includes(r.id) ? { ...r, isEditing: true } : r));
+  };
 
   const moveRow = (data: TableRow[], setData: React.Dispatch<React.SetStateAction<TableRow[]>>, index: number, direction: 'up' | 'down') => {
     const newData = [...data];
@@ -112,8 +146,8 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
   const renderSplitTableView = (data: TableRow[], setData: React.Dispatch<React.SetStateAction<TableRow[]>>, title: string) => (
     <div className="flex flex-col flex-1 overflow-hidden p-6 bg-white animate-in fade-in duration-300">
       
-      {/* 智能匹配引导横条 (对齐原型) */}
-      <div className="w-full bg-[#f0f7ff] border border-[#d1e9ff] rounded-md p-3 mb-6 flex items-center justify-between shadow-sm">
+      {/* 智能匹配引导横条 */}
+      <div className="w-full bg-[#f0f7ff] border border-[#d1e9ff] rounded-md p-3 mb-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">
             <Zap size={16} />
@@ -131,11 +165,37 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
         </button>
       </div>
 
+      {/* 批量操作工具栏 */}
+      <div className={`flex items-center gap-4 mb-4 p-2 bg-gray-50 rounded-lg border border-gray-100 transition-all ${selectedRowIds.length > 0 ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+        <span className="text-xs font-bold text-gray-500 ml-2">已选 {selectedRowIds.length} 项:</span>
+        <div className="flex items-center gap-2">
+           <span className="text-[11px] text-gray-400">批量设置接入状态:</span>
+           <button onClick={() => handleBatchUpdateStatus(data, setData, '是')} className="px-3 py-1 bg-white border border-gray-200 rounded text-[11px] hover:border-blue-500 hover:text-blue-600 font-bold transition-colors">是</button>
+           <button onClick={() => handleBatchUpdateStatus(data, setData, '否')} className="px-3 py-1 bg-white border border-gray-200 rounded text-[11px] hover:border-blue-500 hover:text-blue-600 font-bold transition-colors">否</button>
+           <button onClick={() => handleBatchUpdateStatus(data, setData, '无需接入')} className="px-3 py-1 bg-white border border-gray-200 rounded text-[11px] hover:border-blue-500 hover:text-blue-600 font-bold transition-colors">无需接入</button>
+        </div>
+        <div className="w-px h-4 bg-gray-200 mx-2"></div>
+        <button onClick={() => handleBatchEdit(data, setData)} className="flex items-center gap-1 px-3 py-1 bg-white border border-gray-200 rounded text-[11px] hover:border-blue-500 hover:text-blue-600 font-bold transition-colors">
+          <Edit2 size={12}/> 批量编辑
+        </button>
+        <button onClick={() => handleBatchDelete(data, setData)} className="flex items-center gap-1 px-3 py-1 bg-white border border-red-100 text-red-500 rounded text-[11px] hover:bg-red-50 font-bold transition-colors">
+          <Trash2 size={12}/> 批量删除
+        </button>
+      </div>
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-auto">
           <table className="w-full text-sm text-left border-collapse">
             <thead className="bg-[#f9fafc] text-gray-400 font-bold border-b border-gray-100 uppercase text-[11px] tracking-tight">
               <tr>
+                <th className="px-4 py-4 text-center w-12">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 rounded border-gray-300"
+                    checked={data.length > 0 && selectedRowIds.length === data.length}
+                    onChange={() => toggleSelectAll(data)}
+                  />
+                </th>
                 <th className="px-4 py-4 text-center w-14">序号</th>
                 <th className="px-4 py-4 w-60"><span className="text-red-500 mr-1">*</span>信息项名称</th>
                 <th className="px-4 py-4 w-32">接入状态</th>
@@ -146,7 +206,15 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {data.map((row, idx) => (
-                <tr key={row.id} className="hover:bg-blue-50/5 group transition-colors">
+                <tr key={row.id} className={`hover:bg-blue-50/5 group transition-colors ${selectedRowIds.includes(row.id) ? 'bg-blue-50/30' : ''}`}>
+                  <td className="px-4 py-4 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-gray-300"
+                      checked={selectedRowIds.includes(row.id)}
+                      onChange={() => toggleSelectRow(row.id)}
+                    />
+                  </td>
                   <td className="px-4 py-5 text-center text-gray-400 font-mono text-xs">{idx + 1}</td>
                   <td className="px-4 py-4">
                     {row.isEditing ? (
@@ -168,9 +236,13 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
                         <option value="请选择" disabled>请选择</option>
                         <option value="是">是</option>
                         <option value="否">否</option>
+                        <option value="无需接入">无需接入</option>
                       </select>
                     ) : (
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-black ${row.isLinked === '是' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black ${
+                        row.isLinked === '是' ? 'bg-green-100 text-green-700' : 
+                        row.isLinked === '无需接入' ? 'bg-gray-100 text-gray-500' : 'bg-orange-100 text-orange-700'
+                      }`}>
                         {row.isLinked}
                       </span>
                     )}
@@ -208,7 +280,10 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
                       ) : (
                          <button onClick={() => updateRowField(data, setData, row.id, 'isEditing', true)} className="text-blue-500 hover:text-blue-700 text-xs font-bold">编辑</button>
                       )}
-                      <button onClick={() => setData(data.filter(r => r.id !== row.id))} className="text-blue-500 hover:text-red-500 text-xs font-bold">删除</button>
+                      <button onClick={() => {
+                        setData(data.filter(r => r.id !== row.id));
+                        setSelectedRowIds(prev => prev.filter(i => i !== row.id));
+                      }} className="text-blue-500 hover:text-red-500 text-xs font-bold">删除</button>
                       <div className="w-px h-3 bg-gray-100"></div>
                       <button onClick={() => moveRow(data, setData, idx, 'up')} disabled={idx === 0} className="p-1 text-gray-300 hover:text-blue-500 disabled:opacity-20"><ArrowUp size={16}/></button>
                       <button onClick={() => moveRow(data, setData, idx, 'down')} disabled={idx === data.length - 1} className="p-1 text-gray-300 hover:text-blue-500 disabled:opacity-20"><ArrowDown size={16}/></button>
@@ -293,7 +368,6 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
             </div>
           </div>
           
-          {/* 新增：备注说明 (非必填) */}
           <div className="space-y-4">
             <label className="text-sm font-black text-gray-700 flex items-center gap-2">
               备注说明
@@ -311,11 +385,16 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
     );
   };
 
+  const handleSidebarClick = (id: string) => {
+    setSelectedTreeId(id);
+    setSelectedRowIds([]); // 切换视图时清空选中
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="bg-white w-[98%] h-[95%] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 ring-1 ring-black/5">
         
-        {/* Header - 全局按钮现在放在这里 */}
+        {/* Header */}
         <div className="h-16 px-8 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
@@ -357,12 +436,11 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
                 </div>
                 {inputExpanded && (
                   <div className="ml-5 border-l border-gray-100 mt-2 space-y-1">
-                    <div onClick={() => setSelectedTreeId('form-info')} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer text-xs ml-3 transition-all ${selectedTreeId === 'form-info' ? 'bg-blue-600 text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>
+                    <div onClick={() => handleSidebarClick('form-info')} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer text-xs ml-3 transition-all ${selectedTreeId === 'form-info' ? 'bg-blue-600 text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>
                       <Layout size={16} /> <span>表单信息 (拆分)</span>
                     </div>
-                    {/* Fix: Add explicit type annotation to the map callback for materialsConfigs */}
                     {Object.values(materialsConfigs).map((mat: MaterialConfig) => (
-                      <div key={mat.id} onClick={() => setSelectedTreeId(mat.id)} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer text-xs ml-3 transition-all ${selectedTreeId === mat.id ? 'bg-blue-600 text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>
+                      <div key={mat.id} onClick={() => handleSidebarClick(mat.id)} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer text-xs ml-3 transition-all ${selectedTreeId === mat.id ? 'bg-blue-600 text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>
                         <div className={`w-1.5 h-1.5 rounded-full ${mat.fieldsText ? (selectedTreeId === mat.id ? 'bg-white' : 'bg-green-500') : 'bg-gray-200'}`}></div>
                         <span className="truncate max-w-[140px]">{mat.name}</span>
                       </div>
@@ -379,7 +457,7 @@ const ItemSplitModal: React.FC<ItemSplitModalProps> = ({ onClose }) => {
                 </div>
                 {outputExpanded && (
                   <div className="ml-5 border-l border-gray-100 mt-2 space-y-1">
-                    <div onClick={() => setSelectedTreeId('output-doc')} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer text-xs ml-3 transition-all ${selectedTreeId === 'output-doc' ? 'bg-indigo-600 text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>
+                    <div onClick={() => handleSidebarClick('output-doc')} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer text-xs ml-3 transition-all ${selectedTreeId === 'output-doc' ? 'bg-indigo-600 text-white font-bold shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}>
                       <FileCheck size={16} /> <span>结果证明文档 (拆分)</span>
                     </div>
                   </div>
