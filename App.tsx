@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
@@ -8,9 +7,9 @@ import {
   Bell,
   FileBarChart2
 } from 'lucide-react';
-import ItemManagement from './components/ItemManagement';
-import StatAnalysis from './components/StatAnalysis';
-import { SidebarItem } from './types';
+import ItemManagement from './components/ItemManagement.tsx';
+import StatAnalysis from './components/StatAnalysis.tsx';
+import { SidebarItem } from './types.ts';
 
 const App: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState('stat-analysis');

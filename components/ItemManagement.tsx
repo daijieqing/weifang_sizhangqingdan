@@ -1,8 +1,7 @@
-
 import React, { useState, useRef } from 'react';
 import { RefreshCw, ListFilter, Settings, Info, X, FileText, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Layout, Calendar, Layers, FileCheck, PieChart, Activity, Share2, Target, BarChart3, FileOutput, Database, Link2, ClipboardList, FileSignature } from 'lucide-react';
-import { ServiceItem } from '../types';
-import ItemSplitModal from './ItemSplitModal';
+import { ServiceItem } from '../types.ts';
+import ItemSplitModal from './ItemSplitModal.tsx';
 
 const Tooltip: React.FC<{ content: string; children: React.ReactNode }> = ({ content, children }) => {
   const [visible, setVisible] = useState(false);
@@ -110,9 +109,7 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
     );
   };
 
-  // 模拟详细数据
   const mockDetails = {
-    // 申报材料【输入】
     input: {
       formInfo: [
         { name: '姓名', linked: '是', resource: '自然人基础信息查询接口', field: '姓名', remark: '--' },
@@ -125,7 +122,6 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
         { id: 'm3', name: '延长参保缴费年限申请表', fields: '--', linked: '否', access: '--', remark: '--' },
       ]
     },
-    // 办理结果【输出】
     output: {
       resultInfo: [
         { name: '批准决定书编号', linked: '是', resource: '审批结果公示库', field: '编号', remark: '' },
@@ -140,7 +136,6 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
         onClick={onClose}
       />
       <div className={`fixed top-0 right-0 h-full w-[1100px] max-w-[95vw] bg-[#f8fafc] shadow-2xl z-[1001] transition-transform duration-300 ease-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
-        {/* Header */}
         <div className="h-16 px-8 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-3">
              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-100">
@@ -154,7 +149,6 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
         </div>
         
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
-          {/* 基本信息看板 */}
           <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50/50 rounded-full -mr-24 -mt-24 pointer-events-none"></div>
             <div className="relative z-10 space-y-8">
@@ -180,8 +174,6 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
                   </div>
                 </div>
               </div>
-
-              {/* 指标看板 */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <MetricCard label="拆分关联进度" value={item.splitProgress} color="blue" />
                 <MetricCard label="单材料免提交率" value={item.relateProgress} color="orange" />
@@ -191,22 +183,14 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
             </div>
           </div>
 
-          {/* 申报材料详情【输入】 */}
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-               <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                  <h4 className="text-base font-black text-gray-800">申报材料信息详情【输入端】</h4>
-               </div>
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+              <h4 className="text-base font-black text-gray-800">申报材料信息详情【输入端】</h4>
             </div>
-
             <div className="space-y-4">
-              {/* 1. 表单信息拆分列表 */}
               <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                <div 
-                  onClick={() => toggleSection('form-info')}
-                  className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                >
+                <div onClick={() => toggleSection('form-info')} className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3">
                     <Layout size={18} className="text-blue-600" />
                     <span className="text-sm font-black text-gray-800">表单信息（字段拆分关联）</span>
@@ -246,110 +230,6 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
                   </div>
                 )}
               </div>
-
-              {/* 2. 申报材料要素列表 */}
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                <div 
-                  onClick={() => toggleSection('materials-list')}
-                  className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <FileSignature size={18} className="text-indigo-500" />
-                    <span className="text-sm font-black text-gray-800">申报材料清单（要素登记及接入）</span>
-                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded">共 {mockDetails.input.materials.length} 份</span>
-                  </div>
-                  {expandedIndices.includes('materials-list') ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
-                </div>
-                {expandedIndices.includes('materials-list') && (
-                  <div className="p-4 bg-white border-t border-gray-50">
-                    <table className="w-full text-xs text-left">
-                       <thead className="bg-[#f9fafc] text-gray-400 font-bold uppercase text-[10px] tracking-widest border-b border-gray-50">
-                          <tr>
-                            <th className="px-6 py-4 w-16 text-center">序号</th>
-                            <th className="px-6 py-4 w-56">材料名称</th>
-                            <th className="px-6 py-4">包含字段内容</th>
-                            <th className="px-6 py-4 w-24">接入状态</th>
-                            <th className="px-6 py-4 w-40">接入方式</th>
-                            <th className="px-6 py-4 w-32">备注</th>
-                          </tr>
-                       </thead>
-                       <tbody className="divide-y divide-gray-50">
-                          {mockDetails.input.materials.map((mat, i) => (
-                            <tr key={mat.id} className="hover:bg-indigo-50/10 transition-colors">
-                              <td className="px-6 py-4 text-center text-gray-400 font-mono">{i+1}</td>
-                              <td className="px-6 py-4 font-black text-gray-800">{mat.name}</td>
-                              <td className="px-6 py-4">
-                                <div className="text-gray-600 leading-relaxed font-medium line-clamp-2" title={mat.fields}>
-                                  {mat.fields}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <div className={`w-1.5 h-1.5 rounded-full ${mat.linked === '是' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-gray-300'}`}></div>
-                                  <span className={`font-black ${mat.linked === '是' ? 'text-green-600' : 'text-gray-400'}`}>{mat.linked}</span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 font-bold text-gray-700">{mat.access}</td>
-                              <td className="px-6 py-4 text-gray-400 italic">{mat.remark}</td>
-                            </tr>
-                          ))}
-                       </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* 办理结果信息详情【输出】 */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-               <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
-               <h4 className="text-base font-black text-gray-800">办理结果详情【输出端】</h4>
-            </div>
-
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                <div 
-                  onClick={() => toggleSection('output-doc')}
-                  className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <FileCheck size={18} className="text-indigo-600" />
-                    <span className="text-sm font-black text-gray-800">结果证明文档（信息项拆分关联）</span>
-                  </div>
-                  {expandedIndices.includes('output-doc') ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
-                </div>
-                {expandedIndices.includes('output-doc') && (
-                  <div className="p-4 bg-white border-t border-gray-50">
-                    <table className="w-full text-xs text-left">
-                       <thead className="bg-[#f9fafc] text-gray-400 font-bold uppercase text-[10px] tracking-widest border-b border-gray-50">
-                          <tr>
-                            <th className="px-6 py-4 w-16 text-center">序号</th>
-                            <th className="px-6 py-4 w-56">结果信息项</th>
-                            <th className="px-6 py-4 w-32">回流接入状态</th>
-                            <th className="px-6 py-4">关联资源目录 / 字段</th>
-                            <th className="px-6 py-4">备注</th>
-                          </tr>
-                       </thead>
-                       <tbody className="divide-y divide-gray-50">
-                          {mockDetails.output.resultInfo.map((row, i) => (
-                            <tr key={i} className="hover:bg-indigo-50/10">
-                              <td className="px-6 py-4 text-center text-gray-400 font-mono">{i+1}</td>
-                              <td className="px-6 py-4 font-black text-gray-800">{row.name}</td>
-                              <td className="px-6 py-4">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-black ${row.linked === '是' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'}`}>{row.linked}</span>
-                              </td>
-                              <td className="px-6 py-4 font-bold text-gray-700">
-                                <div>{row.resource}</div>
-                                {row.field !== '--' && <div className="text-indigo-500 text-[10px]">字段: {row.field}</div>}
-                              </td>
-                              <td className="px-6 py-4 text-gray-400 italic">{row.remark || '--'}</td>
-                            </tr>
-                          ))}
-                       </tbody>
-                    </table>
-                  </div>
-                )}
             </div>
           </div>
         </div>
@@ -383,20 +263,10 @@ const ItemManagement: React.FC = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-bold text-gray-800">政务服务事项管理</h2>
-
-      {/* Filter Section */}
       <section className="bg-white p-6 rounded shadow-sm border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="flex items-center gap-2">
             <label className="text-sm whitespace-nowrap w-24 text-gray-600">事项主项</label>
-            <input type="text" placeholder="请输入" className="flex-1 border border-gray-300 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 text-sm" />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm whitespace-nowrap w-24 text-gray-600">事项子项</label>
-            <input type="text" placeholder="请输入" className="flex-1 border border-gray-300 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 text-sm" />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm whitespace-nowrap w-24 text-gray-600">事项办理项</label>
             <input type="text" placeholder="请输入" className="flex-1 border border-gray-300 rounded px-3 py-1.5 focus:outline-none focus:border-blue-500 text-sm" />
           </div>
           <div className="flex justify-end items-center gap-4 col-span-full">
@@ -406,60 +276,16 @@ const ItemManagement: React.FC = () => {
         </div>
       </section>
 
-      {/* Table Section */}
       <section className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button className="px-4 py-1.5 border border-gray-300 rounded text-sm hover:bg-gray-50 font-medium transition-colors">批量导入</button>
-            <button className="px-4 py-1.5 border border-gray-300 rounded text-sm hover:bg-gray-50 font-medium transition-colors">导出数据</button>
-          </div>
-          <div className="flex items-center gap-4 text-gray-400">
-            <RefreshCw size={18} className="cursor-pointer hover:text-blue-500 transition-colors" />
-            <ListFilter size={18} className="cursor-pointer hover:text-blue-500 transition-colors" />
-            <Settings size={18} className="cursor-pointer hover:text-blue-500 transition-colors" />
-          </div>
-        </div>
-
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
             <thead className="bg-[#fafafa] text-gray-500 font-bold border-b border-gray-100 uppercase tracking-tight text-[11px]">
               <tr>
-                <th className="px-4 py-4 font-bold">序号</th>
-                <th className="px-4 py-4 font-bold">事项主项</th>
-                <th className="px-4 py-4 font-bold">子项</th>
-                <th className="px-4 py-4 font-bold">办理项</th>
-                <th className="px-4 py-4 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    拆分关联进度
-                    <Tooltip content="已填写的输入输出文件信息占全部输入输出文件比例">
-                      <Info size={14} className="text-gray-400 cursor-help" />
-                    </Tooltip>
-                  </div>
-                </th>
-                <th className="px-4 py-4 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    单材料免提交率
-                    <Tooltip content="申报材料文件中有接入的数量占全部的申报材料文件数">
-                      <Info size={14} className="text-gray-400 cursor-help" />
-                    </Tooltip>
-                  </div>
-                </th>
-                <th className="px-4 py-4 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    表单免填报率
-                    <Tooltip content="申报填报的字段中，已关联数据资源目录的字段占总字段的比例。">
-                      <FileText size={14} className="text-emerald-500 cursor-help" />
-                    </Tooltip>
-                  </div>
-                </th>
-                <th className="px-4 py-4 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    输出结果共享合规率
-                    <Tooltip content="输出结果信息项关联数据目录的数量占信息项总数的比例。">
-                      <Share2 size={14} className="text-indigo-500 cursor-help" />
-                    </Tooltip>
-                  </div>
-                </th>
+                <th className="px-4 py-4">序号</th>
+                <th className="px-4 py-4">事项主项</th>
+                <th className="px-4 py-4">办理项</th>
+                <th className="px-4 py-4 text-center">拆分关联进度</th>
+                <th className="px-4 py-4 text-center">表单免填报率</th>
                 <th className="px-4 py-4 font-bold">更新时间</th>
                 <th className="px-4 py-4 font-bold">操作</th>
               </tr>
@@ -469,18 +295,14 @@ const ItemManagement: React.FC = () => {
                 <tr key={item.id} className="hover:bg-blue-50/10 transition-colors">
                   <td className="px-4 py-4 text-gray-400 font-mono">{idx + 1}</td>
                   <td className="px-4 py-4 text-gray-800 font-medium">{item.mainItem}</td>
-                  <td className="px-4 py-4 text-gray-800">{item.subItem}</td>
                   <td className="px-4 py-4 text-gray-800">{item.processItem}</td>
                   <td className="px-4 py-4 text-center min-w-[120px]"><ProgressBar percent={item.splitProgress} color="blue" /></td>
-                  <td className="px-4 py-4 text-center min-w-[120px]"><ProgressBar percent={item.relateProgress} color="orange" /></td>
                   <td className="px-4 py-4 text-center min-w-[120px]"><ProgressBar percent={item.exemptRate} color="emerald" /></td>
-                  <td className="px-4 py-4 text-center min-w-[120px]"><ProgressBar percent={item.complianceRate} color="indigo" /></td>
                   <td className="px-4 py-4 text-gray-500">{item.updateTime}</td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-4 font-bold text-blue-600">
                       <button className="hover:text-blue-800 hover:underline transition-colors" onClick={() => handleViewDetails(item)}>查看</button>
                       <button className="hover:text-blue-800 hover:underline transition-colors" onClick={() => handleOpenSplitModal(item)}>拆分</button>
-                      <button className="hover:text-blue-800 hover:underline transition-colors" onClick={() => handleOpenSplitModal(item)}>关联数据</button>
                     </div>
                   </td>
                 </tr>
@@ -491,11 +313,7 @@ const ItemManagement: React.FC = () => {
       </section>
 
       {isModalOpen && <ItemSplitModal onClose={() => setIsModalOpen(false)} />}
-      <DetailsDrawer 
-        item={selectedItem} 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)} 
-      />
+      <DetailsDrawer item={selectedItem} isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
     </div>
   );
 };
