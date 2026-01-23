@@ -1,5 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { RefreshCw, ListFilter, Settings, Info, X, FileText, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Layout, Calendar, Layers, FileCheck, PieChart, Activity, Share2, Target, BarChart3, FileOutput, Database, Link2, ClipboardList, FileSignature } from 'lucide-react';
+import { 
+  RefreshCw, ListFilter, Settings, Info, X, FileText, ChevronDown, ChevronUp, 
+  CheckCircle2, AlertCircle, Layout, Calendar, Layers, FileCheck, PieChart, 
+  Activity, Share2, Target, BarChart3, FileOutput, Database, Link2, 
+  ClipboardList, FileSignature, FileSearch, Inbox, Send 
+} from 'lucide-react';
 import { ServiceItem } from '../types.ts';
 import ItemSplitModal from './ItemSplitModal.tsx';
 
@@ -99,7 +104,7 @@ const MetricCard: React.FC<{ label: string; value: number; color: 'blue' | 'emer
 };
 
 const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClose: () => void }> = ({ item, isOpen, onClose }) => {
-  const [expandedIndices, setExpandedIndices] = useState<string[]>(['form-info', 'materials-list', 'output-doc']);
+  const [expandedIndices, setExpandedIndices] = useState<string[]>(['form-info', 'materials-list', 'output-info']);
 
   if (!item) return null;
 
@@ -112,19 +117,21 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
   const mockDetails = {
     input: {
       formInfo: [
-        { name: '姓名', linked: '是', resource: '自然人基础信息查询接口', field: '姓名', remark: '--' },
-        { name: '照片', linked: '否', resource: '--', field: '--', remark: '电子证照中获取' },
-        { name: '结婚证号', linked: '是', resource: '婚姻登记状态查询接口', field: '婚姻状态', remark: '--' },
+        { name: '申请人姓名', linked: '是', resource: '自然人基础信息查询接口', field: '姓名', remark: '--' },
+        { name: '证件号码', linked: '是', resource: '自然人基础信息查询接口', field: '公民身份号码', remark: '--' },
+        { name: '婚姻状态', linked: '是', resource: '婚姻登记状态查询接口', field: '婚姻状态', remark: '--' },
+        { name: '联系电话', linked: '否', resource: '--', field: '--', remark: '暂无对应数据元' },
       ],
       materials: [
-        { id: 'm1', name: '居民户口簿', fields: '户主姓名、户口簿首页、出生日期、身份证号码、户籍地址、与户主关系', linked: '是', access: '电子证照回流', remark: '--' },
-        { id: 'm2', name: '身份证', fields: '姓名、性别、民族、出生日期、住址、公民身份号码、签发机关、有效期限', linked: '是', access: '电子证照回流', remark: '读取正反面信息' },
-        { id: 'm3', name: '延长参保缴费年限申请表', fields: '--', linked: '否', access: '--', remark: '--' },
+        { id: 'm1', name: '居民户口簿', fields: '户主姓名、首页地址、出生日期、身份证号', linked: '是', access: '电子证照回流', remark: '--' },
+        { id: 'm2', name: '身份证', fields: '姓名、性别、民族、有效期', linked: '是', access: '省身份证库实时接入', remark: '读取正反面信息' },
+        { id: 'm3', name: '个人收入证明', fields: '月收入额、公司抬头', linked: '否', access: '--', remark: '需要申请人自行上传' },
       ]
     },
     output: {
       resultInfo: [
-        { name: '批准决定书编号', linked: '是', resource: '审批结果公示库', field: '编号', remark: '' },
+        { name: '准予许可决定书', linked: '是', resource: '审批结果公示库', field: '结果文件', remark: '已实现自动共享' },
+        { name: '电子证照凭证', linked: '是', resource: '省电子证照库', field: '证照流水号', remark: '--' },
       ]
     }
   };
@@ -136,12 +143,13 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
         onClick={onClose}
       />
       <div className={`fixed top-0 right-0 h-full w-[1100px] max-w-[95vw] bg-[#f8fafc] shadow-2xl z-[1001] transition-transform duration-300 ease-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+        {/* Header */}
         <div className="h-16 px-8 border-b border-gray-100 flex items-center justify-between bg-white shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-3">
              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-100">
-                <ClipboardList size={18} />
+                <FileSearch size={18} />
              </div>
-             <h3 className="text-base font-black text-gray-800 tracking-tight">政务服务事项拆分关联详情</h3>
+             <h3 className="text-base font-black text-gray-800 tracking-tight">政务服务事项拆分关联详情看板</h3>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors">
             <X size={22} />
@@ -149,6 +157,7 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
         </div>
         
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
+          {/* Top Hero Section */}
           <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50/50 rounded-full -mr-24 -mt-24 pointer-events-none"></div>
             <div className="relative z-10 space-y-8">
@@ -160,78 +169,181 @@ const DetailsDrawer: React.FC<{ item: ServiceItem | null; isOpen: boolean; onClo
                   <h2 className="text-2xl font-black text-gray-800 leading-tight mb-4">{item.processItem}</h2>
                   <div className="flex flex-wrap gap-x-10 gap-y-3">
                     <div className="flex items-center gap-2">
-                       <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">主项</span>
+                       <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">事项主项</span>
                        <span className="text-sm font-bold text-gray-700">{item.mainItem}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                       <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">子项</span>
-                       <span className="text-sm font-bold text-gray-700">{item.subItem}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">最后更新</span>
+                       <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">更新时间</span>
                        <span className="text-sm font-mono text-gray-500 font-bold">{item.updateTime}</span>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard label="拆分关联进度" value={item.splitProgress} color="blue" />
+                <MetricCard label="字段拆分进度" value={item.splitProgress} color="blue" />
                 <MetricCard label="单材料免提交率" value={item.relateProgress} color="orange" />
                 <MetricCard label="表单免填报率" value={item.exemptRate} color="emerald" />
-                <MetricCard label="输出结果共享合规率" value={item.complianceRate} color="indigo" />
+                <MetricCard label="结果共享合规率" value={item.complianceRate} color="indigo" />
               </div>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-              <h4 className="text-base font-black text-gray-800">申报材料信息详情【输入端】</h4>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                <div onClick={() => toggleSection('form-info')} className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Layout size={18} className="text-blue-600" />
-                    <span className="text-sm font-black text-gray-800">表单信息（字段拆分关联）</span>
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">共 {mockDetails.input.formInfo.length} 项</span>
-                  </div>
-                  {expandedIndices.includes('form-info') ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
-                </div>
-                {expandedIndices.includes('form-info') && (
-                  <div className="p-4 bg-white border-t border-gray-50">
-                    <table className="w-full text-xs text-left">
-                       <thead className="bg-[#f9fafc] text-gray-400 font-bold uppercase text-[10px] tracking-widest border-b border-gray-50">
-                          <tr>
-                            <th className="px-6 py-4 w-16 text-center">序号</th>
-                            <th className="px-6 py-4 w-48">信息项名称</th>
-                            <th className="px-6 py-4 w-24">接入状态</th>
-                            <th className="px-6 py-4">关联资源目录 / 字段</th>
-                            <th className="px-6 py-4">备注</th>
-                          </tr>
-                       </thead>
-                       <tbody className="divide-y divide-gray-50">
-                          {mockDetails.input.formInfo.map((row, i) => (
-                            <tr key={i} className="hover:bg-blue-50/10">
-                              <td className="px-6 py-4 text-center text-gray-400 font-mono">{i+1}</td>
-                              <td className="px-6 py-4 font-black text-gray-800">{row.name}</td>
-                              <td className="px-6 py-4">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-black ${row.linked === '是' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{row.linked}</span>
-                              </td>
-                              <td className="px-6 py-4 font-bold text-gray-700">
-                                <div className="max-w-[300px] truncate">{row.resource}</div>
-                                {row.field !== '--' && <div className="text-blue-500 text-[10px]">字段: {row.field}</div>}
-                              </td>
-                              <td className="px-6 py-4 text-gray-400 italic">{row.remark}</td>
-                            </tr>
-                          ))}
-                       </tbody>
-                    </table>
-                  </div>
-                )}
+          {/* 1. 申报表单信息 (输入端) */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                <h4 className="text-base font-black text-gray-800 flex items-center gap-2">
+                   <Inbox size={18} className="text-blue-600"/> 申报表单信息【输入端】
+                </h4>
               </div>
             </div>
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+              <div onClick={() => toggleSection('form-info')} className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Layout size={18} className="text-blue-500" />
+                  <span className="text-sm font-black text-gray-800">表单字段拆分与数据关联详情</span>
+                  <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">共 {mockDetails.input.formInfo.length} 个字段</span>
+                </div>
+                {expandedIndices.includes('form-info') ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+              </div>
+              {expandedIndices.includes('form-info') && (
+                <div className="p-0 bg-white border-t border-gray-50">
+                  <table className="w-full text-xs text-left">
+                     <thead className="bg-[#f9fafc] text-gray-400 font-bold uppercase text-[10px] tracking-widest border-b border-gray-50">
+                        <tr>
+                          <th className="px-6 py-4 w-16 text-center">序号</th>
+                          <th className="px-6 py-4">信息项名称</th>
+                          <th className="px-6 py-4">接入状态</th>
+                          <th className="px-6 py-4">关联资源目录 / 字段</th>
+                          <th className="px-6 py-4">备注</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-gray-50">
+                        {mockDetails.input.formInfo.map((row, i) => (
+                          <tr key={i} className="hover:bg-blue-50/10">
+                            <td className="px-6 py-4 text-center text-gray-400 font-mono">{i+1}</td>
+                            <td className="px-6 py-4 font-black text-gray-800">{row.name}</td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-black ${row.linked === '是' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{row.linked}</span>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-gray-700">
+                              <div className="max-w-[350px] truncate">{row.resource}</div>
+                              {row.field !== '--' && <div className="text-blue-500 text-[10px] mt-0.5">关联字段: {row.field}</div>}
+                            </td>
+                            <td className="px-6 py-4 text-gray-400 italic">{row.remark}</td>
+                          </tr>
+                        ))}
+                     </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* 2. 申报材料信息 (输入端) */}
+          <div className="space-y-4">
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+              <div onClick={() => toggleSection('materials-list')} className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <FileText size={18} className="text-orange-500" />
+                  <span className="text-sm font-black text-gray-800">申报材料要素（精细化拆分）</span>
+                  <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-bold rounded">共 {mockDetails.input.materials.length} 份材料</span>
+                </div>
+                {expandedIndices.includes('materials-list') ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+              </div>
+              {expandedIndices.includes('materials-list') && (
+                <div className="p-0 bg-white border-t border-gray-50">
+                  <table className="w-full text-xs text-left">
+                     <thead className="bg-[#fcfaf9] text-gray-400 font-bold uppercase text-[10px] tracking-widest border-b border-gray-50">
+                        <tr>
+                          <th className="px-6 py-4 w-16 text-center">序号</th>
+                          <th className="px-6 py-4">材料名称</th>
+                          <th className="px-6 py-4 w-64">拆分要素点</th>
+                          <th className="px-6 py-4">接入状态</th>
+                          <th className="px-6 py-4">获取方式</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-gray-50">
+                        {mockDetails.input.materials.map((row, i) => (
+                          <tr key={i} className="hover:bg-orange-50/10">
+                            <td className="px-6 py-4 text-center text-gray-400 font-mono">{i+1}</td>
+                            <td className="px-6 py-4 font-black text-gray-800">{row.name}</td>
+                            <td className="px-6 py-4">
+                              <div className="text-[10px] text-gray-500 leading-relaxed font-medium">
+                                {row.fields}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-black ${row.linked === '是' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{row.linked}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                               <div className="text-gray-700 font-bold">{row.access || '--'}</div>
+                               <div className="text-[10px] text-gray-400 mt-0.5">{row.remark}</div>
+                            </td>
+                          </tr>
+                        ))}
+                     </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 3. 办理结果信息 (输出端) */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pt-4">
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+                <h4 className="text-base font-black text-gray-800 flex items-center gap-2">
+                   <Send size={18} className="text-indigo-600"/> 办理结果信息【输出端】
+                </h4>
+              </div>
+            </div>
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+              <div onClick={() => toggleSection('output-info')} className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Database size={18} className="text-indigo-500" />
+                  <span className="text-sm font-black text-gray-800">办理结果证明（数据共享回流）</span>
+                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded">共 {mockDetails.output.resultInfo.length} 项结果</span>
+                </div>
+                {expandedIndices.includes('output-info') ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+              </div>
+              {expandedIndices.includes('output-info') && (
+                <div className="p-0 bg-white border-t border-gray-50">
+                  <table className="w-full text-xs text-left">
+                     <thead className="bg-[#f9f9fc] text-gray-400 font-bold uppercase text-[10px] tracking-widest border-b border-gray-50">
+                        <tr>
+                          <th className="px-6 py-4 w-16 text-center">序号</th>
+                          <th className="px-6 py-4">结果名称</th>
+                          <th className="px-6 py-4">是否合规共享</th>
+                          <th className="px-6 py-4">关联汇聚库 / 字段</th>
+                          <th className="px-6 py-4">共享状态说明</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-gray-50">
+                        {mockDetails.output.resultInfo.map((row, i) => (
+                          <tr key={i} className="hover:bg-indigo-50/10">
+                            <td className="px-6 py-4 text-center text-gray-400 font-mono">{i+1}</td>
+                            <td className="px-6 py-4 font-black text-gray-800">{row.name}</td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-black ${row.linked === '是' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{row.linked}</span>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-gray-700">
+                              <div className="max-w-[350px] truncate">{row.resource}</div>
+                              <div className="text-indigo-500 text-[10px] mt-0.5">目标字段: {row.field}</div>
+                            </td>
+                            <td className="px-6 py-4 text-gray-400 italic font-medium">{row.remark || '--'}</td>
+                          </tr>
+                        ))}
+                     </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="h-20"></div> {/* Bottom spacer */}
         </div>
       </div>
     </>
